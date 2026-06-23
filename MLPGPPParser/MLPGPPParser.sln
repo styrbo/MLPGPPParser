@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MLPGPPParser", "MLPGPPParser.csproj", "{F3F45CF9-255C-4E69-AF31-8701751CDAAC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F3F45CF9-255C-4E69-AF31-8701751CDAAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3F45CF9-255C-4E69-AF31-8701751CDAAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3F45CF9-255C-4E69-AF31-8701751CDAAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3F45CF9-255C-4E69-AF31-8701751CDAAC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
