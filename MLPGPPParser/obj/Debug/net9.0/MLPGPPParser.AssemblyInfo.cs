@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MLPGPPParser")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4f22a973c96298f08687deb62f9b757efc89aef4")]
 [assembly: System.Reflection.AssemblyProductAttribute("MLPGPPParser")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MLPGPPParser")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
