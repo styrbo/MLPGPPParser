@@ -197,7 +197,7 @@ public record Screenshot(uint BucketId, uint Id);
 
 public record GameBuild(uint Id, string Version, string ReleaseDate);
 
-public record GameData(
+public class GameData(
     uint Id,
     string Name,
     string ShortDescription,
@@ -205,8 +205,8 @@ public record GameData(
     string ReleaseDate,
     string Author,
     Screenshot HeroScreenshot,
-    Screenshot[] OtherScreenshots,
-    GameBuild[] Builds);
+    List<Screenshot> OtherScreenshots,
+    List<GameBuild> Builds);
 
 
 [Serializable]
