@@ -26,7 +26,7 @@ void CreateEmptyConfig() {
     var newConfig = new Config(
         "idk",
         "idk",
-        "source!A2:U",
+        "source!A3:X",
         "O:/MLGPP/s");
     
     var newConfigJson = JsonSerializer.Serialize(newConfig);

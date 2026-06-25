@@ -11,6 +11,8 @@ public enum Label {
 
 public enum Tag {
     
+    None = 0,
+    
     //Genre
     visual_novel,
     puzzle,
