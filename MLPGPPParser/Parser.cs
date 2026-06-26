@@ -362,6 +362,8 @@ public class Parser {
                 errorMessage = buildErrorMessage;
                 return false;
             }
+            
+            var sourceURL = GetDataFromCell(line, ColumnType.Source);
 
             if (tags.Contains(Tag.None)) {
                 errorMessage = "no valid tags";
@@ -374,6 +376,7 @@ public class Parser {
                 ShortDescription: shortDescription,
                 Tags: new TagsCollection(tags),
                 ReleaseDate: releaseData,
+                SourceURL: sourceURL,
                 Author: authors,
                 HeroScreenshot: heroScreenshot,
                 OtherScreenshots: otherScreenshots,

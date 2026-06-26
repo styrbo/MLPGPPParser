@@ -199,7 +199,7 @@ public class TagsCollection {
     }
 }
 
-public record Screenshot(uint BucketId, uint Id);
+public record Screenshot(uint BucketId, uint Id, string format);
 
 public record GameBuild(uint Id, string Version, string ReleaseDate);
 
@@ -209,11 +209,18 @@ public record GameData(
     string ShortDescription,
     TagsCollection Tags,
     string ReleaseDate,
+    string SourceURL,
     string Author,
     Screenshot HeroScreenshot,
     List<Screenshot> OtherScreenshots,
     List<GameBuild> Builds);
 
+
+
+[Serializable]
+public class SerializedGamesCollectionData {
+    public GameSerializedData[] games;
+}
 
 [Serializable]
 public class SerializedTagData {
@@ -230,7 +237,9 @@ public record GameSerializedData {
     public string shortDescription;
     public string fullDescription;
     public SerializedTagData[] tags;
+    public string[] characters;
     public string playtime;
     public string url;
     public string dateAdded;
+    public string[] screenshots;
 }

@@ -27,7 +27,9 @@ void CreateEmptyConfig() {
         "idk",
         "idk",
         "source!A3:X",
-        "O:/MLGPP/s");
+        "O:/MLGPP/s",
+        "O:/MLGPP/Pony.Games//data/games.json",
+        @"O:\MLGPP\Pony.Games");
     
     var newConfigJson = JsonSerializer.Serialize(newConfig);
     Directory.CreateDirectory(configPath.Substring(0, configPath.LastIndexOf('\\'))); // (Resources\config.json)
@@ -53,6 +55,29 @@ var parser = new Parser(screenshotCollection);
 
 var games = ConsoleDrawer.RunTask(Task.Run(() => parser.ParseGames(sheetData.Values)));
 
+ConsoleDrawer.DrawText($"parsed {games.Length} games");
+
+ConsoleDrawer.DrawText("Generating Json");
+
+var formatedGames = DBFormater.FormatGames(config, games);
+
+var jsonOptions = new JsonSerializerOptions() {
+    IncludeFields = true,
+    WriteIndented = true,
+};
+var json = JsonSerializer.Serialize(formatedGames, jsonOptions);
+
+ConsoleDrawer.DrawText("Saving Json");
+
+File.Delete(config.gamesJsonPath);
+File.WriteAllText(config.gamesJsonPath, json);
+
+ConsoleDrawer.DrawText("Moving Screenshots");
+var siteDirectory = @$"{config.siteLocalPath}/s/";
+if(Directory.Exists(siteDirectory))
+    Directory.Delete(siteDirectory, recursive:true);
+Directory.CreateDirectory(siteDirectory);
+FileUtilities.CopyDirectory(config.localScreenshotsDBPath, siteDirectory, true);
 
 ConsoleDrawer.DrawText("Done!");
 

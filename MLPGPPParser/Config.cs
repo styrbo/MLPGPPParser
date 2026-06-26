@@ -5,4 +5,6 @@ public record Config(
     string APIToken,
     string sheetID,
     string dataRange,
-    string localScreenshotsDBPath);
+    string localScreenshotsDBPath,
+    string gamesJsonPath,
+    string siteLocalPath);
