@@ -42,13 +42,16 @@ var api = new SheetsService(initializer);
 
 var request = api.Spreadsheets.Values.Get(config.sheetID, config.dataRange);
 
-ConsoleDrawer.DrawText("Loading sheet data...");
+ConsoleDrawer.DrawText("Loading screenshots data...");
+var screenshotCollection = ConsoleDrawer.RunTask(Task.Run(() => ScreenshotsCollection.LoadScreenshots(config.localScreenshotsDBPath)));
 
+ConsoleDrawer.DrawText("Loading sheet data...");
 var sheetData = ConsoleDrawer.RunTask(request.ExecuteAsync());
 
 ConsoleDrawer.DrawText("Parsing data...");
+var parser = new Parser(screenshotCollection);
 
-var games = ConsoleDrawer.RunTask(Task.Run(() => Parser.ParseGames(sheetData.Values)));
+var games = ConsoleDrawer.RunTask(Task.Run(() => parser.ParseGames(sheetData.Values)));
 
 
 ConsoleDrawer.DrawText("Done!");

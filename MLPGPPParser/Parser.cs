@@ -1,6 +1,6 @@
 ﻿namespace MLPGPPParser;
 
-public static class Parser {
+public class Parser {
     public enum ColumnType : int {
         Id = 0,
         Name = 1,
@@ -33,6 +33,12 @@ public static class Parser {
         BuildBroken,
         DLC,
     }
+
+    public Parser(ScreenshotsCollection screenshotsCollection) {
+        _screenshotsCollection = screenshotsCollection;
+    }
+
+    private ScreenshotsCollection _screenshotsCollection;
 
     private static RecordType GetRecordType(string type) {
         switch (type) {
@@ -239,16 +245,21 @@ public static class Parser {
         }
     }
 
-    public static GameData[] ParseGames(IList<IList<object>> sheetData) {
+    public GameData[] ParseGames(IList<IList<object>> sheetData) {
         var games = new Dictionary<uint, GameData>();
 
-        foreach (var row in sheetData) {
-            if (TryParseLine(games, row, out var errorMessage) == false) { }
+        for (var index = 0; index < sheetData.Count; index++) {
+            var row = sheetData[index];
+            
+            if (TryParseLine(games, row, out var errorMessage) == false) {
+                ConsoleDrawer.DrawError($"can't parse row {index + 3} {errorMessage}");
+                continue;
+            } else {
+                ConsoleDrawer.DrawText($"parsed row {index + 3}");
+            }
         }
 
-        Thread.Sleep(6769);
-
-        return [];
+        return games.Values.ToArray();
     }
 
     public static bool IsValidGameEntry(IList<object> line, out string errorMessage) {
@@ -285,7 +296,7 @@ public static class Parser {
         return true;
     }
 
-    public static bool TryParseLine(IDictionary<uint, GameData> games, IList<object> line, out string errorMessage) {
+    public bool TryParseLine(IDictionary<uint, GameData> games, IList<object> line, out string errorMessage) {
         if (IsValidGameEntry(line, out errorMessage) == false) {
             return false;
         }
@@ -301,9 +312,9 @@ public static class Parser {
             var characterData = GetDataFromLine(line, ColumnType.Characters);
             var playtimeData = GetDataFromLine(line, ColumnType.Playtime);
             var authors = GetDataFromLine(line, ColumnType.Creator);
-            
+
             var releaseData = GetDataFromLine(line, ColumnType.ReleaseData);
-            
+
             var screenshotsBucketId = GetDataFromLine(line, ColumnType.ScreenshotsBucketId);
 
             var tags = GetTags(genreOrTags);
@@ -327,26 +338,63 @@ public static class Parser {
                 var playtime = GetTag(playtimeData);
                 tags = tags.Append(playtime);
             }
-            
-            Screenshot heroScreenshot = null;
-            Screenshot[] otherScreenshots = null;
-            if (IsCellHasContent(screenshotsBucketId) 
-                && uint.TryParse(screenshotsBucketId, out var screenshotsBuckedId)) {
 
-                heroScreenshot = new Screenshot(screenshotsBuckedId, 0);
+            Screenshot heroScreenshot = null;
+            List<Screenshot> otherScreenshots = null;
+            if (IsCellHasContent(screenshotsBucketId)
+                && uint.TryParse(screenshotsBucketId, out var screenshotsBuckedId)) {
+                heroScreenshot = _screenshotsCollection.GetHeroScreenshot(screenshotsBuckedId);
+                otherScreenshots = _screenshotsCollection.GetOtherScreenshots(screenshotsBuckedId);
+            }
+
+            if (TryParseGameBuild(line, out var build, out var buildErrorMessage) == false) {
+                errorMessage = buildErrorMessage;
+                return false;
             }
 
             gameData = new GameData(
                 Id: gameID,
                 Name: gameName,
                 ShortDescription: shortDescription,
-                Tags: new TagsCollection(tags), 
+                Tags: new TagsCollection(tags),
                 ReleaseDate: releaseData,
                 Author: authors,
-                new Screenshot()
-                );
+                HeroScreenshot: heroScreenshot,
+                OtherScreenshots: otherScreenshots,
+                new List<GameBuild> {
+                    build
+                }
+            );
+            
+            games[gameID] = gameData;
+            errorMessage = "";
+            return true;
+        }
+        
+        if (TryParseGameBuild(line, out var build1, out var buildErrorMessage1) == false) {
+            errorMessage = buildErrorMessage1;
+            return false;
+        }
+        
+        gameData.Builds.Add(build1);
+        errorMessage = "";
+        return true;
+    }
+
+    private bool TryParseGameBuild(IList<object> line, out GameBuild build, out string errorMessage) {
+        var buildIdText = (string)line[(int)ColumnType.ArchiveBuildId];
+        var version = (string)line[(int)ColumnType.Version];
+        var releaseDate = (string)line[(int)ColumnType.ReleaseData];
+
+        if (IsCellHasContent(buildIdText) == false ||
+            uint.TryParse(buildIdText, out var buildId) == false) {
+            errorMessage = "no valid build id";
+            build = null;
+
+            return false;
         }
 
+        build = new GameBuild(buildId, version, releaseDate);
         errorMessage = "";
         return true;
     }

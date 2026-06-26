@@ -199,7 +199,7 @@ public record Screenshot(uint BucketId, uint Id);
 
 public record GameBuild(uint Id, string Version, string ReleaseDate);
 
-public class GameData(
+public record GameData(
     uint Id,
     string Name,
     string ShortDescription,

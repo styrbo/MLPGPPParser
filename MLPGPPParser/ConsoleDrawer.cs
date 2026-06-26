@@ -6,7 +6,6 @@ public static class ConsoleDrawer {
     public static int DrawError(string errorMessage) {
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine($"error: {errorMessage}");
-        Console.ReadKey();
         return -1;
     }
 
