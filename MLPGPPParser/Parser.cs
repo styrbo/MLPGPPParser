@@ -6,22 +6,22 @@ public class Parser {
         Name = 1,
         Version = 2,
         Platform = 3,
-        Status = 7,
-        Engine = 8,
-        Source = 9,
-        SourcePlatform = 10,
-        ArchiveBuildId = 11,
-        Distributing = 12,
-        AgeRestriction = 13,
-        ScreenshotsBucketId = 15,
-        ShortDescription = 16,
-        GenresOrTags = 17,
-        Creator = 18,
-        ReleaseData = 19,
-        RecordTypeData = 20,
-        Characters = 21,
-        Playtime = 22,
-        LastUpdate = 23,
+        Status = 6,
+        Engine = 7,
+        Source = 8,
+        SourcePlatform = 9,
+        ArchiveBuildId = 10,
+        Distributing = 11,
+        AgeRestriction = 12,
+        ScreenshotsBucketId = 14,
+        ShortDescription = 15,
+        GenresOrTags = 16,
+        Creator = 17,
+        ReleaseData = 18,
+        RecordTypeData = 19,
+        Characters = 20,
+        Playtime = 21,
+        LastUpdate = 22,
     }
 
     public enum RecordType {
@@ -183,6 +183,10 @@ public class Parser {
                 return Tag.FM2K;
             case "z-engine":
                 return Tag.Z_Engine;
+            case "löve":
+                return Tag.LoveEngine;
+            case "clickteam fusion":
+                return Tag.ClickteamFusion;
             case "m6":
                 return Tag.M6;
             case "cmc":
@@ -219,7 +223,10 @@ public class Parser {
         return false;
     }
 
-    private static string GetDataFromLine(IList<object> line, ColumnType columnType) {
+    private static string GetDataFromCell(IList<object> line, ColumnType columnType) {
+        if (line.Count <= (int)columnType)
+            return string.Empty;
+        
         var obj = line[(int)columnType];
 
         return (string)obj;
@@ -252,10 +259,11 @@ public class Parser {
             var row = sheetData[index];
             
             if (TryParseLine(games, row, out var errorMessage) == false) {
-                ConsoleDrawer.DrawError($"can't parse row {index + 3} {errorMessage}");
+                ConsoleDrawer.DrawError($"can't parse row {index} {errorMessage}");
+                
                 continue;
             } else {
-                ConsoleDrawer.DrawText($"parsed row {index + 3}");
+                ConsoleDrawer.DrawText($"parsed row {index}");
             }
         }
 
@@ -267,25 +275,27 @@ public class Parser {
             errorMessage = "empty lane";
             return false;
         }
+        
+        var idData = GetDataFromCell(line, ColumnType.Id);
 
-        if (uint.TryParse(line[(int)ColumnType.Id].ToString(), out var id) == false) {
+        if (uint.TryParse(idData, out var id) == false) {
             errorMessage = "id is not a number";
             return false;
         }
 
-        var name = line[(int)ColumnType.Name].ToString();
+        var name = GetDataFromCell(line, ColumnType.Name);
         if (string.IsNullOrWhiteSpace(name)) {
             errorMessage = "name is empty";
             return false;
         }
 
-        var buildIdText = (string)line[(int)ColumnType.ArchiveBuildId];
+        var buildIdText = GetDataFromCell(line, ColumnType.ArchiveBuildId);
         if (IsCellHasContent(buildIdText) == false) {
             errorMessage = "no valid build id";
             return false;
         }
-
-        var recordTypeText = (string)line[(int)ColumnType.RecordTypeData];
+        
+        var recordTypeText = GetDataFromCell(line, ColumnType.RecordTypeData);
         var recordType = GetRecordType(recordTypeText);
         if (recordType != RecordType.Game && recordType != RecordType.GameSource) {
             errorMessage = "not a game/source";
@@ -301,21 +311,22 @@ public class Parser {
             return false;
         }
 
-        var gameID = uint.Parse((string)line[(int)ColumnType.Id]);
+        var gameIdText = GetDataFromCell(line, ColumnType.Id);
+        var gameID = uint.Parse(gameIdText);
 
         if (games.TryGetValue(gameID, out var gameData) == false) {
-            var gameName = GetDataFromLine(line, ColumnType.Name);
-            var shortDescription = GetDataFromLine(line, ColumnType.ShortDescription);
-            var genreOrTags = GetDataFromLine(line, ColumnType.GenresOrTags);
-            var statusData = GetDataFromLine(line, ColumnType.Status);
-            var engineData = GetDataFromLine(line, ColumnType.Engine);
-            var characterData = GetDataFromLine(line, ColumnType.Characters);
-            var playtimeData = GetDataFromLine(line, ColumnType.Playtime);
-            var authors = GetDataFromLine(line, ColumnType.Creator);
+            var gameName = GetDataFromCell(line, ColumnType.Name);
+            var shortDescription = GetDataFromCell(line, ColumnType.ShortDescription);
+            var genreOrTags = GetDataFromCell(line, ColumnType.GenresOrTags);
+            var statusData = GetDataFromCell(line, ColumnType.Status);
+            var engineData = GetDataFromCell(line, ColumnType.Engine);
+            var characterData = GetDataFromCell(line, ColumnType.Characters);
+            var playtimeData = GetDataFromCell(line, ColumnType.Playtime);
+            var authors = GetDataFromCell(line, ColumnType.Creator);
 
-            var releaseData = GetDataFromLine(line, ColumnType.ReleaseData);
+            var releaseData = GetDataFromCell(line, ColumnType.ReleaseData);
 
-            var screenshotsBucketId = GetDataFromLine(line, ColumnType.ScreenshotsBucketId);
+            var screenshotsBucketId = GetDataFromCell(line, ColumnType.ScreenshotsBucketId);
 
             var tags = GetTags(genreOrTags);
 
@@ -352,6 +363,11 @@ public class Parser {
                 return false;
             }
 
+            if (tags.Contains(Tag.None)) {
+                errorMessage = "no valid tags";
+                return false;
+            }
+
             gameData = new GameData(
                 Id: gameID,
                 Name: gameName,
@@ -382,9 +398,9 @@ public class Parser {
     }
 
     private bool TryParseGameBuild(IList<object> line, out GameBuild build, out string errorMessage) {
-        var buildIdText = (string)line[(int)ColumnType.ArchiveBuildId];
-        var version = (string)line[(int)ColumnType.Version];
-        var releaseDate = (string)line[(int)ColumnType.ReleaseData];
+        var buildIdText = GetDataFromCell(line, ColumnType.ArchiveBuildId);
+        var version = GetDataFromCell(line, ColumnType.Version);
+        var releaseDate = GetDataFromCell(line, ColumnType.ReleaseData);
 
         if (IsCellHasContent(buildIdText) == false ||
             uint.TryParse(buildIdText, out var buildId) == false) {
@@ -398,29 +414,4 @@ public class Parser {
         errorMessage = "";
         return true;
     }
-
-
-    // lol we did not have them
-    /*
-
-    private bool ValidatePlatform(string platform, out string errorMessage) {
-        if (string.IsNullOrWhiteSpace(platform)) {
-            errorMessage = "platform is empty";
-            return false;
-        }
-
-        switch (platform) {
-            case "?":
-            case "web":
-            case "windows":
-            case "OSX":
-            case "windows_x32":
-                case
-                errorMessage = "";
-                return true;
-            default:
-                errorMessage = $"platform {platform} is not supported by Parser";
-        }
-    }
-    */
 }

@@ -26,7 +26,7 @@ public class ScreenshotsCollection {
         while (true) {
             var folderPath = Path.Combine(screenshotsDBPath, currentBucketID.ToString());
 
-            if (!Directory.Exists(folderPath) == false)
+            if (Directory.Exists(folderPath) == false)
                 break;
 
             var screenshots = ScreenshotsId(folderPath)
@@ -43,6 +43,9 @@ public class ScreenshotsCollection {
             items.Add(screenshots.Length);
             currentBucketID++;
         }
+        
+        
+        ConsoleDrawer.DrawText($"Loaded {items.Count} screenshots buckets");
 
         return new ScreenshotsCollection {
             CountPerBucket = items.ToArray(),
@@ -60,6 +63,8 @@ public class ScreenshotsCollection {
 
     private static bool ValidateScreenshot(string filePath, out uint screenshotID) {
         screenshotID = 0;
+        
+        filePath = filePath.Replace('\\', '/');
 
         if (string.IsNullOrWhiteSpace(filePath))
             return false;

@@ -80,6 +80,8 @@ public enum Tag {
     Adventure_Game_Studio,
     FM2K,
     Z_Engine,
+    LoveEngine,
+    ClickteamFusion,
     
     //Character
     M6,
@@ -176,6 +178,8 @@ public class TagsCollection {
             case Tag.Adventure_Game_Studio: return Label.Engine;
             case Tag.FM2K: return Label.Engine;
             case Tag.Z_Engine: return Label.Engine;
+            case Tag.LoveEngine: return Label.Engine;
+            case Tag.ClickteamFusion: return Label.Engine;
             
             case Tag.M6: return Label.Character;
             case Tag.CMC: return Label.Character;
