@@ -97,23 +97,48 @@ public enum Tag {
     FROM_2h_TO_4h,
     FROM_4h_TO_10h,
     MORE_10h,
+    
+    //Platform
+    Platform_Web,
+    Platform_Windows,
+    Platform_OSX,
+    Platform_WindowsX32,
+    Platform_Android,
+    Platform_Linux,
+    Platform_Ios,
+    Platform_Ps4,
+    Platform_Xboxone,
+    Platform_Switch,
+    Platform_SNES,
+    Platform_NintendoDS,
+    Platform_GBA,
+    Platform_GameBoy,
+    Platform_Roblox,
+    Platform_Source_Code,
+    Platform_VR,
+    Platform_Flash,
 }
 
 public class TagsCollection {
 
-    public Dictionary<Label, Tag> Tags;
+    public Dictionary<Label, List<Tag>> Tags;
     
     public TagsCollection(IEnumerable<Tag> tags) {
-        var tagsCollection = new Dictionary<Label, Tag>();
+        var tagsCollection = new Dictionary<Label, List<Tag>>();
         
         foreach (var tag in tags) {
-            tagsCollection.Add(FindLabel(tag), tag);
+            
+            if (tagsCollection.ContainsKey(GetLabelFromTag(tag)) == false) {
+                tagsCollection.Add(GetLabelFromTag(tag), new List<Tag>());
+            }
+            
+            tagsCollection[GetLabelFromTag(tag)].Add(tag);
         }
         
         Tags = tagsCollection;
     }
     
-    public Label FindLabel(Tag tag) {
+    public Label GetLabelFromTag(Tag tag) {
         switch (tag) {
             case Tag.visual_novel: return Label.Genre;
             case Tag.puzzle: return Label.Genre;
@@ -201,7 +226,7 @@ public class TagsCollection {
 
 public record Screenshot(uint BucketId, uint Id, string format);
 
-public record GameBuild(uint Id, string Version, string ReleaseDate);
+public record GameBuild(uint Id, string Version, string ReleaseDate, Tag platform);
 
 public record GameData(
     uint Id,
@@ -211,9 +236,10 @@ public record GameData(
     string ReleaseDate,
     string SourceURL,
     string Author,
+    Tag playtime,
     Screenshot HeroScreenshot,
     List<Screenshot> OtherScreenshots,
-    List<GameBuild> Builds);
+    List<GameBuild?>? Builds);
 
 
 
@@ -229,6 +255,13 @@ public class SerializedTagData {
 }
 
 [Serializable]
+public class SerializedDownloadData {
+    public string label;
+    public string version; // can be empty
+    public string url;
+}
+
+[Serializable]
 public record GameSerializedData {
     public int id;
     public string title;
@@ -239,7 +272,15 @@ public record GameSerializedData {
     public SerializedTagData[] tags;
     public string[] characters;
     public string playtime;
+
+    public string status; //new
+    public string engine; //new
+    public string[] platforms;
+    
     public string url;
     public string dateAdded;
+    
+    public SerializedDownloadData[] downloads; //new
+    
     public string[] screenshots;
 }

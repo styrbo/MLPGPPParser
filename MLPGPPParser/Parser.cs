@@ -59,8 +59,17 @@ public class Parser {
         }
     }
 
-    private static Tag GetTag(string tag) {
+    private static Tag GetTag(string tag, ColumnType column) {
         tag = tag.ToLower();
+
+        //todo fix this shit
+        if (tag == "roblox") {
+            return column == ColumnType.Platform ? Tag.Platform_Roblox : Tag.roblox;
+        }
+
+        if (tag == "flash") {
+            return column == ColumnType.Platform ? Tag.Platform_Flash : Tag.flash;
+        }
 
         switch (tag) {
             case "visual novel":
@@ -153,8 +162,6 @@ public class Parser {
                 return Tag.In_Development;
             case "custom/none":
                 return Tag.customORnone;
-            case "flash":
-                return Tag.flash;
             case "unity":
                 return Tag.unity;
             case "ue":
@@ -171,8 +178,6 @@ public class Parser {
                 return Tag.RenPy;
             case "blender":
                 return Tag.blender;
-            case "roblox":
-                return Tag.roblox;
             case "html5":
                 return Tag.html5;
             case "java":
@@ -209,6 +214,40 @@ public class Parser {
                 return Tag.FROM_4h_TO_10h;
             case "10h+":
                 return Tag.MORE_10h;
+
+            case "web":
+                return Tag.Platform_Web;
+            case "windows":
+                return Tag.Platform_Windows;
+            case "osx":
+                return Tag.Platform_OSX;
+            case "windows_x32":
+                return Tag.Platform_WindowsX32;
+            case "android":
+                return Tag.Platform_Android;
+            case "linux":
+                return Tag.Platform_Linux;
+            case "ios":
+                return Tag.Platform_Ios;
+            case "ps4":
+                return Tag.Platform_Ps4;
+            case "xboxone":
+                return Tag.Platform_Xboxone;
+            case "switch":
+                return Tag.Platform_Switch;
+            case "snes":
+                return Tag.Platform_SNES;
+            case "nintendo ds":
+                return Tag.Platform_NintendoDS;
+            case "gba":
+                return Tag.Platform_GBA;
+            case "game boy":
+                return Tag.Platform_GameBoy;
+            case "source code":
+                return Tag.Platform_Source_Code;
+            case "vr":
+                return Tag.Platform_VR;
+
             default:
                 return Tag.None;
         }
@@ -226,7 +265,7 @@ public class Parser {
     private static string GetDataFromCell(IList<object> line, ColumnType columnType) {
         if (line.Count <= (int)columnType)
             return string.Empty;
-        
+
         var obj = line[(int)columnType];
 
         return (string)obj;
@@ -235,7 +274,7 @@ public class Parser {
     private static IEnumerable<Tag> GetTags(string lane, char separator = ',') {
         var tagsText = lane.Split(separator);
         foreach (var tagText in tagsText) {
-            var tag = GetTag(tagText);
+            var tag = GetTag(tagText, ColumnType.GenresOrTags);
 
             if (tag != Tag.None) {
                 yield return tag;
@@ -257,10 +296,10 @@ public class Parser {
 
         for (var index = 0; index < sheetData.Count; index++) {
             var row = sheetData[index];
-            
+
             if (TryParseLine(games, row, out var errorMessage) == false) {
                 ConsoleDrawer.DrawError($"can't parse row {index} {errorMessage}");
-                
+
                 continue;
             } else {
                 ConsoleDrawer.DrawText($"parsed row {index}");
@@ -275,7 +314,7 @@ public class Parser {
             errorMessage = "empty lane";
             return false;
         }
-        
+
         var idData = GetDataFromCell(line, ColumnType.Id);
 
         if (uint.TryParse(idData, out var id) == false) {
@@ -290,11 +329,12 @@ public class Parser {
         }
 
         var buildIdText = GetDataFromCell(line, ColumnType.ArchiveBuildId);
-        if (IsCellHasContent(buildIdText) == false) {
-            errorMessage = "no valid build id";
+        var sourceLink = GetDataFromCell(line, ColumnType.Source);
+        if (IsCellHasContent(buildIdText) == false && IsCellHasContent(sourceLink) == false) {
+            errorMessage = "no valid build id or source";
             return false;
         }
-        
+
         var recordTypeText = GetDataFromCell(line, ColumnType.RecordTypeData);
         var recordType = GetRecordType(recordTypeText);
         if (recordType != RecordType.Game && recordType != RecordType.GameSource) {
@@ -336,7 +376,7 @@ public class Parser {
             }
 
             if (IsCellHasContent(engineData)) {
-                var engine = GetTag(engineData);
+                var engine = GetTag(engineData, ColumnType.Engine);
                 tags = tags.Append(engine);
             }
 
@@ -345,8 +385,9 @@ public class Parser {
                 tags = tags.Concat(characters);
             }
 
+            var playtime = Tag.None;
             if (IsCellHasContent(playtimeData)) {
-                var playtime = GetTag(playtimeData);
+                playtime = GetTag(playtimeData, ColumnType.Playtime);
                 tags = tags.Append(playtime);
             }
 
@@ -362,7 +403,7 @@ public class Parser {
                 errorMessage = buildErrorMessage;
                 return false;
             }
-            
+
             var sourceURL = GetDataFromCell(line, ColumnType.Source);
 
             if (tags.Contains(Tag.None)) {
@@ -378,42 +419,51 @@ public class Parser {
                 ReleaseDate: releaseData,
                 SourceURL: sourceURL,
                 Author: authors,
+                playtime: playtime,
                 HeroScreenshot: heroScreenshot,
                 OtherScreenshots: otherScreenshots,
                 new List<GameBuild> {
                     build
                 }
             );
-            
+
             games[gameID] = gameData;
             errorMessage = "";
             return true;
         }
-        
+
         if (TryParseGameBuild(line, out var build1, out var buildErrorMessage1) == false) {
             errorMessage = buildErrorMessage1;
             return false;
         }
-        
+
         gameData.Builds.Add(build1);
         errorMessage = "";
         return true;
     }
 
-    private bool TryParseGameBuild(IList<object> line, out GameBuild build, out string errorMessage) {
+    private bool TryParseGameBuild(IList<object> line, out GameBuild? build, out string errorMessage) {
         var buildIdText = GetDataFromCell(line, ColumnType.ArchiveBuildId);
         var version = GetDataFromCell(line, ColumnType.Version);
         var releaseDate = GetDataFromCell(line, ColumnType.ReleaseData);
+        var platformText = GetDataFromCell(line, ColumnType.Platform);
 
         if (IsCellHasContent(buildIdText) == false ||
             uint.TryParse(buildIdText, out var buildId) == false) {
-            errorMessage = "no valid build id";
             build = null;
+            errorMessage = "";
+            return true;
+        }
 
+        if (IsCellHasContent(platformText) == false) {
+            build = null;
+            errorMessage = "no platform info";
             return false;
         }
 
-        build = new GameBuild(buildId, version, releaseDate);
+        var platform = GetTag(platformText, ColumnType.Platform);
+
+        build = new GameBuild(buildId, version, releaseDate, platform);
         errorMessage = "";
         return true;
     }

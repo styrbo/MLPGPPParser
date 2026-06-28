@@ -73,11 +73,21 @@ File.Delete(config.gamesJsonPath);
 File.WriteAllText(config.gamesJsonPath, json);
 
 ConsoleDrawer.DrawText("Moving Screenshots");
+
 var siteDirectory = @$"{config.siteLocalPath}/s/";
 if(Directory.Exists(siteDirectory))
     Directory.Delete(siteDirectory, recursive:true);
 Directory.CreateDirectory(siteDirectory);
-FileUtilities.CopyDirectory(config.localScreenshotsDBPath, siteDirectory, true);
+
+var neededScreenshotsBuckets = games
+    .Where(g => g.HeroScreenshot != null)
+    .Select(g => g.HeroScreenshot.BucketId).Distinct();
+
+foreach (var screenshotsBucket in neededScreenshotsBuckets) {
+    FileUtilities.CopyDirectory(
+        $"{config.localScreenshotsDBPath}/{screenshotsBucket}",
+        $"{siteDirectory}{screenshotsBucket}", true);   
+}
 
 ConsoleDrawer.DrawText("Done!");
 
